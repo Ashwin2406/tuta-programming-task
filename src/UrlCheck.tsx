@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 interface UrlData {
   url: string;
@@ -8,6 +8,8 @@ interface UrlData {
 export default function UrlCheck() {
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const timer = useRef<NodeJS.Timeout>();
   const sampleApi = "https://mocki.io/v1/ef956329-cea3-4f6c-94bb-dd42b3bed68c"; //sample api generated using mocki.io
 
   const sampleURLs = [
@@ -39,6 +41,9 @@ export default function UrlCheck() {
   ];
 
   const checkUrlFormat = (value: string) => {
+    setErrorMessage("");
+    setSuccessMessage("");
+    setLoading(true);
     const url = value.trim(); //trim unwanted spaces
     if (url) {
       //function to check url format using a regular expression
@@ -53,24 +58,28 @@ export default function UrlCheck() {
       );
 
       if (!pattern.test(url)) {
+        setLoading(false);
         setSuccessMessage("");
         setErrorMessage("Invalid URL format");
         return;
       }
 
-      //throttling url existence check using a timeout of 500ms
-      const timer = setTimeout(() => {
+      //debouncing url existence check using a timeout of 500ms
+
+      if (timer.current) {
+        clearTimeout(timer.current);
+      }
+      timer.current = setTimeout(() => {
         checkURLExists(url);
       }, 500);
-      return () => clearTimeout(timer);
-
     } else {
+      setLoading(false);
       setErrorMessage("");
       setSuccessMessage("");
     }
   };
 
-  const checkURLExists = async (url:string) => {
+  const checkURLExists = async (url: string) => {
     const apiResponse: UrlData[] = await fetch(sampleApi).then((response) =>
       response.json()
     );
@@ -80,26 +89,28 @@ export default function UrlCheck() {
     );
 
     if (urlExists) {
+      setLoading(false);
       setSuccessMessage(urlExists.url + " exists, it is a " + urlExists.type);
       setErrorMessage("");
     } else {
+      setLoading(false);
       setErrorMessage("Invalid URL, URL does not exist!");
       setSuccessMessage("");
     }
   };
 
-  const ListOfUrls = () => { //listing sample urls
+  const ListOfUrls = () => {
+    //listing sample urls
     return (
       <ul>
-        {sampleURLs?.map((item: UrlData, index: number) =>  (
-            <li key={index}>
-              <label style={{ fontWeight: "bold" }}> URL : </label>
-              <label>{item.url}</label>
-              <label style={{ fontWeight: "bold" }}> Type : </label>
-              <label>{item.type}</label>
-            </li>
-          )
-        )}
+        {sampleURLs?.map((item: UrlData, index: number) => (
+          <li key={index}>
+            <label style={{ fontWeight: "bold" }}> URL : </label>
+            <label>{item.url}</label>
+            <label style={{ fontWeight: "bold" }}> Type : </label>
+            <label>{item.type}</label>
+          </li>
+        ))}
       </ul>
     );
   };
@@ -143,7 +154,7 @@ export default function UrlCheck() {
             defaultValue=""
             placeholder="Enter URL"
             onChange={(e) => {
-              checkUrlFormat(e.target.value);//checks the url format every time the input value changes
+              checkUrlFormat(e.target.value); //checks the url format every time the input value changes
             }}
             style={{
               width: "30vw",
@@ -154,6 +165,16 @@ export default function UrlCheck() {
               outline: "none",
             }}
           />
+           {loading && (
+            <label
+              style={{
+                alignSelf: "flex-start",
+                paddingLeft: "10px",
+              }}
+            >
+              checking url....
+            </label>
+          )}
           {errorMessage && (
             <label
               style={{
