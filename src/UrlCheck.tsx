@@ -10,7 +10,7 @@ export default function UrlCheck() {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const timer = useRef<NodeJS.Timeout>();
-  const sampleApi = "https://mocki.io/v1/ef956329-cea3-4f6c-94bb-dd42b3bed68c"; //sample api generated using mocki.io
+  const sampleApi = "https://mocki.io/v1/970d417e-eaee-4155-94d9-1598953bd36e"; //sample api generated using mocki.io
 
   const sampleURLs = [
     //same json used as response in mock api
